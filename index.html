@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="教科別の学習時間を記録し、日・週・月ごとに集計できる学習時間記録ツール" />
+  <title>学習時間記録</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="page-header">
+      <div>
+        <p class="badge">STUDY LOG</p>
+        <h1>学習時間記録</h1>
+        <p class="description">教科ごとの勉強時間を記録し、今日・今週・今月の合計を確認できます。</p>
+      </div>
+      <div class="header-actions">
+        <a class="home-link" href="https://kentaro0810.github.io/timer-app/">タイマーを開く</a>
+        <a class="home-link" href="https://kentaro0810.github.io/">リンク集へ戻る</a>
+      </div>
+    </header>
+
+    <section class="summary-grid" aria-label="学習時間のまとめ">
+      <article class="summary-card main-summary"><p>今日</p><strong id="todayTotal">0分</strong><span id="todayGoalText">目標を設定できます</span></article>
+      <article class="summary-card"><p>今週</p><strong id="weekTotal">0分</strong><span>月曜日から今日まで</span></article>
+      <article class="summary-card"><p>今月</p><strong id="monthTotal">0分</strong><span>今月の合計時間</span></article>
+      <article class="summary-card"><p>連続学習</p><strong id="streakTotal">0日</strong><span>1分以上記録した日</span></article>
+    </section>
+
+    <section class="goal-card">
+      <div class="section-heading">
+        <div><p class="section-kicker">DAILY GOAL</p><h2>今日の目標</h2></div>
+        <button id="goalButton" class="secondary-button" type="button">目標を設定</button>
+      </div>
+      <div class="progress-track" aria-hidden="true"><div id="goalProgress" class="progress-fill"></div></div>
+      <p id="goalStatus" class="goal-status">目標時間が未設定です。</p>
+    </section>
+
+    <section class="entry-card">
+      <div class="section-heading">
+        <div><p class="section-kicker">NEW RECORD</p><h2>学習時間を記録</h2></div>
+      </div>
+      <form id="studyForm" class="study-form">
+        <div><label for="studyDate">日付</label><input id="studyDate" type="date" required /></div>
+        <div><label for="subjectInput">教科・内容</label><input id="subjectInput" type="text" maxlength="30" list="subjectSuggestions" placeholder="例：英語" required /><datalist id="subjectSuggestions"></datalist></div>
+        <div><label for="minutesInput">時間（分）</label><input id="minutesInput" type="number" min="1" max="1440" inputmode="numeric" placeholder="例：45" required /></div>
+        <div class="form-wide"><label for="memoInput">メモ（任意）</label><input id="memoInput" type="text" maxlength="100" placeholder="例：英単語と長文読解" /></div>
+        <div class="quick-minutes" aria-label="時間の入力補助">
+          <button type="button" data-minutes="15">15分</button><button type="button" data-minutes="30">30分</button><button type="button" data-minutes="45">45分</button><button type="button" data-minutes="60">60分</button><button type="button" data-minutes="90">90分</button>
+        </div>
+        <button class="primary-button form-submit" type="submit">記録を追加</button>
+      </form>
+    </section>
+
+    <section class="analysis-card">
+      <div class="section-heading"><div><p class="section-kicker">SUBJECTS</p><h2>教科別集計</h2></div><select id="analysisPeriod" aria-label="集計期間"><option value="week">今週</option><option value="month">今月</option><option value="all">全期間</option></select></div>
+      <div id="subjectSummary" class="subject-summary"></div>
+      <div id="analysisEmpty" class="empty-state compact"><span aria-hidden="true">📊</span><h3>表示できる記録がありません</h3></div>
+    </section>
+
+    <section class="history-card">
+      <div class="section-heading"><div><p class="section-kicker">HISTORY</p><h2>学習履歴</h2></div><div class="history-filters"><input id="searchInput" type="search" placeholder="教科・メモを検索" /><select id="historySubject"><option value="all">すべての教科</option></select></div></div>
+      <div id="historyList" class="history-list"></div>
+      <div id="historyEmpty" class="empty-state"><span aria-hidden="true">📝</span><h3>学習記録がありません</h3><p>上のフォームから最初の記録を追加してください。</p></div>
+    </section>
+
+    <section class="data-card">
+      <h2>データ管理</h2>
+      <p>記録はこの端末のブラウザー内に保存されます。JSONバックアップとCSV書き出しに対応しています。</p>
+      <div class="data-actions">
+        <button id="exportJsonButton" class="secondary-button" type="button">JSONを書き出す</button>
+        <button id="exportCsvButton" class="secondary-button" type="button">CSVを書き出す</button>
+        <label class="secondary-button file-label" for="importInput">JSONを読み込む</label>
+        <input id="importInput" type="file" accept="application/json,.json" hidden />
+        <button id="resetAllButton" class="danger-button" type="button">全データを削除</button>
+      </div>
+      <p id="statusMessage" class="status-message" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <dialog id="editDialog" class="edit-dialog">
+    <form id="editForm" method="dialog">
+      <div class="dialog-heading"><div><p class="section-kicker">EDIT RECORD</p><h2>記録を編集</h2></div><button id="closeDialogButton" class="icon-button" type="button" aria-label="閉じる">×</button></div>
+      <input id="editId" type="hidden" />
+      <label for="editDate">日付</label><input id="editDate" type="date" required />
+      <label for="editSubject">教科・内容</label><input id="editSubject" type="text" maxlength="30" required />
+      <label for="editMinutes">時間（分）</label><input id="editMinutes" type="number" min="1" max="1440" required />
+      <label for="editMemo">メモ</label><input id="editMemo" type="text" maxlength="100" />
+      <div class="dialog-actions"><button id="cancelButton" class="secondary-button" type="button">キャンセル</button><button class="primary-button" type="submit">変更を保存</button></div>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
